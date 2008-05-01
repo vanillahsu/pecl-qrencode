@@ -4,15 +4,19 @@ only 2 function to generate qr code.
 
 <code>
 $qr = qr_encode ('test for qrcode');
-qr_save ($qr, '1.png');
+if (is_resource ($qr))
+    qr_save ($qr, '1.png');
 </code>
 
 or you can output direct to stdout.
 
 <code>
 $qr = qr_encode ('test for qrcode');
-header ("Content-type: image/PNG");
-qr_save ($qr);
+if (is_resource ($qr))
+{
+    header ("Content-type: image/PNG");
+    qr_save ($qr);
+}
 </code>
 
 resource = qr_encode (string $text, [ int $version, int $mode, int $casesensitive]);

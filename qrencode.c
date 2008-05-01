@@ -11,10 +11,6 @@
   +----------------------------------------------------------------------+
 */
 
-/*
- * $Header: /home/ncvs/php_extension/qrencode/qrencode.c,v 1.2 2008/01/24 02:44:41 vanilla Exp $
- */
-
 /**
  * $file qrencode.c
  * @brief source file of php qrencode extension.
@@ -58,7 +54,7 @@ zend_module_entry qrencode_module_entry = {
     NULL,
     PHP_MINFO(qrencode),
 #if ZEND_MODULE_API_NO >= 20010901
-    "$Revision: 1.2 $",
+    "0.3",
 #endif
     STANDARD_MODULE_PROPERTIES
 };
@@ -71,6 +67,7 @@ PHP_MINIT_FUNCTION(qrencode)
 {
     le_qr = zend_register_list_destructors_ex(qr_dtor, NULL, "qr", module_number);
 
+    REGISTER_LONG_CONSTANT ("QR_MODE_NUL", QR_MODE_NUL, CONST_CS | CONST_PERSISTENT);
     REGISTER_LONG_CONSTANT ("QR_MODE_NUM", QR_MODE_NUM, CONST_CS | CONST_PERSISTENT);
     REGISTER_LONG_CONSTANT ("QR_MODE_AN", QR_MODE_AN, CONST_CS | CONST_PERSISTENT);
     REGISTER_LONG_CONSTANT ("QR_MODE_8", QR_MODE_8, CONST_CS | CONST_PERSISTENT);
@@ -115,7 +112,16 @@ PHP_FUNCTION(qr_encode)
         RETURN_FALSE;
 
     qr = (php_qrcode *) emalloc (sizeof (php_qrcode));
-    qr->c = QRcode_encodeString(text, version, level, mode, casesensitive);
+    if (mode == QR_MODE_8)
+        qr->c = QRcode_encodeString8bit(text, version, level);
+    else
+        qr->c = QRcode_encodeString(text, version, level, mode, casesensitive);
+
+    if (qr->c == NULL)
+    {
+        efree (qr);
+        RETURN_FALSE;
+    }
 
     ZEND_REGISTER_RESOURCE (return_value, qr, le_qr);
 }
