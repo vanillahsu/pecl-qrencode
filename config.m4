@@ -7,7 +7,7 @@ Make sure that the comment is aligned:
 
 if test "$PHP_QRENCODE" != "no"; then
   # --with-qrencode -> check with-path
-  SEARCH_PATH="/usr/local /usr"     # you might want to change this
+  SEARCH_PATH="/usr $prefix"     # you might want to change this
   SEARCH_FOR="/include/qrencode.h"  # you most likely want to change this
   if test -r $PHP_QRENCODE/$SEARCH_FOR; then # path given as parameter
     QRENCODE_DIR=$PHP_QRENCODE
