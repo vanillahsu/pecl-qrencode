@@ -29,8 +29,7 @@
 
 static int le_qr;
 
-typedef struct
-{
+typedef struct {
     QRcode *c;
 } php_qrcode;
 
@@ -63,29 +62,36 @@ zend_module_entry qrencode_module_entry = {
 ZEND_GET_MODULE(qrencode)
 #endif
 
-PHP_MINIT_FUNCTION(qrencode)
-{
-    le_qr = zend_register_list_destructors_ex(qr_dtor, NULL, "qr", module_number);
+PHP_MINIT_FUNCTION(qrencode) {
+    le_qr = zend_register_list_destructors_ex(qr_dtor, NULL,
+            "qr", module_number);
 
-    REGISTER_LONG_CONSTANT ("QR_MODE_NUL", QR_MODE_NUL, CONST_CS | CONST_PERSISTENT);
-    REGISTER_LONG_CONSTANT ("QR_MODE_NUM", QR_MODE_NUM, CONST_CS | CONST_PERSISTENT);
-    REGISTER_LONG_CONSTANT ("QR_MODE_AN", QR_MODE_AN, CONST_CS | CONST_PERSISTENT);
-    REGISTER_LONG_CONSTANT ("QR_MODE_8", QR_MODE_8, CONST_CS | CONST_PERSISTENT);
-    REGISTER_LONG_CONSTANT ("QR_MODE_KANJI", QR_MODE_KANJI, CONST_CS | CONST_PERSISTENT);
-    REGISTER_LONG_CONSTANT ("QR_ECLEVEL_L", QR_ECLEVEL_L, CONST_CS | CONST_PERSISTENT);
-    REGISTER_LONG_CONSTANT ("QR_ECLEVEL_M", QR_ECLEVEL_M, CONST_CS | CONST_PERSISTENT);
-    REGISTER_LONG_CONSTANT ("QR_ECLEVEL_Q", QR_ECLEVEL_Q, CONST_CS | CONST_PERSISTENT);
-    REGISTER_LONG_CONSTANT ("QR_ECLEVEL_H", QR_ECLEVEL_H, CONST_CS | CONST_PERSISTENT);
+    REGISTER_LONG_CONSTANT("QR_MODE_NUL",
+            QR_MODE_NUL, CONST_CS | CONST_PERSISTENT);
+    REGISTER_LONG_CONSTANT("QR_MODE_NUM",
+            QR_MODE_NUM, CONST_CS | CONST_PERSISTENT);
+    REGISTER_LONG_CONSTANT("QR_MODE_AN",
+            QR_MODE_AN, CONST_CS | CONST_PERSISTENT);
+    REGISTER_LONG_CONSTANT("QR_MODE_8",
+            QR_MODE_8, CONST_CS | CONST_PERSISTENT);
+    REGISTER_LONG_CONSTANT("QR_MODE_KANJI",
+            QR_MODE_KANJI, CONST_CS | CONST_PERSISTENT);
+    REGISTER_LONG_CONSTANT("QR_ECLEVEL_L",
+            QR_ECLEVEL_L, CONST_CS | CONST_PERSISTENT);
+    REGISTER_LONG_CONSTANT("QR_ECLEVEL_M",
+            QR_ECLEVEL_M, CONST_CS | CONST_PERSISTENT);
+    REGISTER_LONG_CONSTANT("QR_ECLEVEL_Q",
+            QR_ECLEVEL_Q, CONST_CS | CONST_PERSISTENT);
+    REGISTER_LONG_CONSTANT("QR_ECLEVEL_H",
+            QR_ECLEVEL_H, CONST_CS | CONST_PERSISTENT);
     return SUCCESS;
 }
 
-PHP_MSHUTDOWN_FUNCTION(qrencode)
-{
+PHP_MSHUTDOWN_FUNCTION(qrencode) {
     return SUCCESS;
 }
 
-PHP_MINFO_FUNCTION(qrencode)
-{
+PHP_MINFO_FUNCTION(qrencode) {
     php_info_print_table_start();
     php_info_print_table_header(2, "qrencode support", "enabled");
     php_info_print_table_end();
@@ -101,29 +107,29 @@ PHP_MINFO_FUNCTION(qrencode)
  * @param casesensitive casesentive, if you want the 8 bit mode, must set this on.
  * @return 
  */
-PHP_FUNCTION(qr_encode)
-{
+PHP_FUNCTION(qr_encode) {
     php_qrcode *qr = NULL;
     long version = 1, level = QR_ECLEVEL_L, mode = QR_MODE_8, casesensitive = 1;
     const char *text;
     int text_len;
 
-    if (zend_parse_parameters( ZEND_NUM_ARGS() TSRMLS_CC, "s|llll", &text, &text_len, &version, &level, &mode, &casesensitive) == FAILURE)
+    if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "s|llll",
+                &text, &text_len, &version, &level, &mode,
+                &casesensitive) == FAILURE)
         RETURN_FALSE;
 
-    qr = (php_qrcode *) emalloc (sizeof (php_qrcode));
+    qr = (php_qrcode *) emalloc(sizeof(php_qrcode));
     if (mode == QR_MODE_8)
         qr->c = QRcode_encodeString8bit(text, version, level);
     else
         qr->c = QRcode_encodeString(text, version, level, mode, casesensitive);
 
-    if (qr->c == NULL)
-    {
-        efree (qr);
+    if (qr->c == NULL) {
+        efree(qr);
         RETURN_FALSE;
     }
 
-    ZEND_REGISTER_RESOURCE (return_value, qr, le_qr);
+    ZEND_REGISTER_RESOURCE(return_value, qr, le_qr);
 }
 /* }}} */
 
@@ -136,8 +142,7 @@ PHP_FUNCTION(qr_encode)
  * @param margin margin.
  * @return 
  */
-PHP_FUNCTION(qr_save)
-{
+PHP_FUNCTION(qr_save) {
     zval *link = NULL;
     long size = 3, margin = 4;
     const char *fn = NULL;
@@ -154,86 +159,84 @@ PHP_FUNCTION(qr_save)
 
     argc = ZEND_NUM_ARGS();
 
-    if (zend_parse_parameters( ZEND_NUM_ARGS() TSRMLS_CC, "r|sll", &link, &fn, &fn_len, &size, &margin) == FAILURE )
+    if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "r|sll",
+                &link, &fn, &fn_len, &size, &margin) == FAILURE)
         RETURN_FALSE;
 
-    if (link)
-    {
+    if (link) {
         php_qrcode *qr = NULL;
 
-        ZEND_FETCH_RESOURCE2 (qr, php_qrcode *, &link, -1, "qr handle", le_qr, NULL);
+        ZEND_FETCH_RESOURCE2(qr, php_qrcode *, &link, -1,
+                "qr handle", le_qr, NULL);
 
-        if ((argc == 2) || (argc > 2 && fn != NULL))
-        {
-            fp = VCWD_FOPEN (fn, "wb");
-            if (!fp)
-            {
-                php_error_docref(NULL TSRMLS_CC, E_WARNING, "Unable to open '%s' for writing.", fn);
+        if ((argc == 2) || (argc > 2 && fn != NULL)) {
+            fp = VCWD_FOPEN(fn, "wb");
+            if (!fp) {
+                php_error_docref(NULL TSRMLS_CC, E_WARNING,
+                        "Unable to open '%s' for writing.", fn);
                 RETURN_FALSE;
             }
-        }
-        else
-        {
-            fp = php_open_temporary_file (NULL, NULL, &path TSRMLS_CC);
-            if (!fp)
-            {
-                php_error_docref(NULL TSRMLS_CC, E_WARNING, "Unable to open temporary file for writing.");
+        } else {
+            fp = php_open_temporary_file(NULL, NULL, &path TSRMLS_CC);
+            if (!fp) {
+                php_error_docref(NULL TSRMLS_CC, E_WARNING,
+                        "Unable to open temporary file for writing.");
                 RETURN_FALSE;
             }
         }
 
         realwidth = (qr->c->width + margin * 2) * size;
-        row = (unsigned char *) emalloc ((realwidth + 7) / 8);
+        row = (unsigned char *)emalloc((realwidth + 7) / 8);
 
-        png_ptr = png_create_write_struct(PNG_LIBPNG_VER_STRING, NULL, NULL, NULL);
-        if(png_ptr == NULL)
-        {
+        png_ptr = png_create_write_struct(PNG_LIBPNG_VER_STRING,
+                NULL, NULL, NULL);
+        if (png_ptr == NULL) {
             fclose(fp);
-            php_error_docref(NULL TSRMLS_CC, E_WARNING, "Failed to initialize PNG writer.");
+            php_error_docref(NULL TSRMLS_CC, E_WARNING,
+                    "Failed to initialize PNG writer.");
             RETURN_FALSE;
         }
 
         info_ptr = png_create_info_struct(png_ptr);
-        if(info_ptr == NULL)
-        {
+        if (info_ptr == NULL) {
             fclose(fp);
-            php_error_docref(NULL TSRMLS_CC, E_WARNING, "Failed to initialize PNG write.");
+            php_error_docref(NULL TSRMLS_CC, E_WARNING,
+                    "Failed to initialize PNG writer.");
             RETURN_FALSE;
         }
 
 
-        if(setjmp(png_jmpbuf(png_ptr))) {
+        if (setjmp(png_jmpbuf(png_ptr))) {
             png_destroy_write_struct(&png_ptr, &info_ptr);
             fclose(fp);
-            php_error_docref(NULL TSRMLS_CC, E_WARNING, "Failed to write PNG image.");
+            php_error_docref(NULL TSRMLS_CC, E_WARNING,
+                    "Failed to write PNG image.");
             RETURN_FALSE;
         }
 
         png_init_io(png_ptr, fp);
 
-        png_set_IHDR(png_ptr, info_ptr, realwidth, realwidth, 1, PNG_COLOR_TYPE_GRAY, PNG_INTERLACE_NONE, PNG_COMPRESSION_TYPE_DEFAULT, PNG_FILTER_TYPE_DEFAULT);
+        png_set_IHDR(png_ptr, info_ptr, realwidth, realwidth, 1,
+                PNG_COLOR_TYPE_GRAY, PNG_INTERLACE_NONE,
+                PNG_COMPRESSION_TYPE_DEFAULT, PNG_FILTER_TYPE_DEFAULT);
         png_write_info(png_ptr, info_ptr);
 
         memset(row, 0xff, (realwidth + 7) / 8);
-        for(y = 0; y < margin * size; y++)
+        for (y = 0; y < margin * size; y++)
             png_write_row(png_ptr, row);
 
         p = qr->c->data;
-        for(y = 0; y < qr->c->width; y++)
-        {
+        for (y = 0; y < qr->c->width; y++) {
             bit = 7;
             memset(row, 0xff, (realwidth + 7) / 8);
             q = row;
             q += margin * size / 8;
             bit = 7 - (margin * size % 8);
-            for(x = 0; x < qr->c->width; x++)
-            {
-                for(xx = 0; xx < size; xx++)
-                {
+            for (x = 0; x < qr->c->width; x++) {
+                for (xx = 0; xx < size; xx++) {
                     *q ^= (*p & 1) << bit;
                     bit--;
-                    if(bit < 0)
-                    {
+                    if (bit < 0) {
                         q++;
                         bit = 7;
                     }
@@ -241,52 +244,48 @@ PHP_FUNCTION(qr_save)
                 p++;
             }
 
-            for(yy=0; yy<size; yy++)
+            for (yy = 0; yy < size; yy++)
                 png_write_row(png_ptr, row);
         }
 
         memset(row, 0xff, (realwidth + 7) / 8);
-        for(y=0; y<margin * size; y++)
+        for (y = 0; y < margin * size; y++)
             png_write_row(png_ptr, row);
 
         png_write_end(png_ptr, info_ptr);
         png_destroy_write_struct(&png_ptr, &info_ptr);
 
-        efree (row);
+        efree(row);
 
-        if ((argc == 2) || (argc > 2 && fn != NULL))
-        {
-            fflush (fp);
-            fclose (fp);
-        }
-        else
-        {
-            fseek (fp, 0, SEEK_SET);
+        if ((argc == 2) || (argc > 2 && fn != NULL)) {
+            fflush(fp);
+            fclose(fp);
+        } else {
+            fseek(fp, 0, SEEK_SET);
 #if APACHE && defined(CHARSET_EBCDIC)
             ap_bsetflag(php3_rqst->connection->client, B_EBCDIC2ASCII, 0);
 #endif
-            while ((b = fread (buf, 1, sizeof(buf), fp)) > 0)
-                php_write (buf, b TSRMLS_CC);
+            while ((b = fread(buf, 1, sizeof(buf), fp)) > 0)
+                php_write(buf, b TSRMLS_CC);
 
-            fclose (fp);
-            VCWD_UNLINK ((const char *)path);
-            efree (path);
+            fclose(fp);
+            VCWD_UNLINK((const char *)path);
+            efree(path);
         }
 
         RETURN_TRUE;
     }
-    else
-        RETURN_FALSE;
+
+    RETURN_FALSE;
 }
 /* }}} */
 
-static void qr_dtor (zend_rsrc_list_entry *rsrc TSRMLS_DC)
-{
-    php_qrcode *qr = (php_qrcode *) rsrc->ptr;
+static void qr_dtor(zend_rsrc_list_entry *rsrc TSRMLS_DC) {
+    php_qrcode *qr = (php_qrcode *)rsrc->ptr;
 
     if (qr->c)
-        QRcode_free (qr->c);
-    efree (qr);
+        QRcode_free(qr->c);
+    efree(qr);
 }
 
 /*
