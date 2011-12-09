@@ -1,0 +1,5 @@
+
+Version 0.4 2011/12/09
+  - Coding style fix.
+  - Add unittest.
+  - Change qr_save api to make it flexible.

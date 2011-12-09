@@ -143,24 +143,23 @@ PHP_FUNCTION(qr_encode) {
  * @return 
  */
 PHP_FUNCTION(qr_save) {
-    zval *link = NULL;
+    zval *link = NULL, *arg2 = NULL, *arg3 = NULL, *arg4 = NULL;
     long size = 3, margin = 4;
-    const char *fn = NULL;
-    int fn_len, argc;
+    int argc;
     FILE *fp = NULL;
     png_structp png_ptr;
     png_infop info_ptr;
     unsigned char *row, *p, *q;
     int x, y, xx, yy, bit;
-    int realwidth;
+    int realwidth, temp_file = 0;
     char *path;
     int b;
     char buf[4096];
 
     argc = ZEND_NUM_ARGS();
 
-    if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "r|sll",
-                &link, &fn, &fn_len, &size, &margin) == FAILURE)
+    if (zend_parse_parameters(argc TSRMLS_CC, "r|zzz",
+                &link, &arg2, &arg3, &arg4) == FAILURE)
         RETURN_FALSE;
 
     if (link) {
@@ -169,20 +168,85 @@ PHP_FUNCTION(qr_save) {
         ZEND_FETCH_RESOURCE2(qr, php_qrcode *, &link, -1,
                 "qr handle", le_qr, NULL);
 
-        if ((argc == 2) || (argc > 2 && fn != NULL)) {
-            fp = VCWD_FOPEN(fn, "wb");
-            if (!fp) {
-                php_error_docref(NULL TSRMLS_CC, E_WARNING,
-                        "Unable to open '%s' for writing.", fn);
+        switch (argc) {
+            case 4:
+                if (Z_TYPE_P(arg2) == IS_STRING) {
+                    // qr_save(resource $link, string $fn, int $size, int $margin);
+                    fp = VCWD_FOPEN(Z_STRVAL_P(arg2), "wb");
+                    if (!fp) {
+                        php_error_docref(NULL TSRMLS_CC, E_WARNING,
+                                "Unable to open '%s' for writing.",
+                                Z_STRVAL_P(arg2));
+                        RETURN_FALSE;
+                    }
+                    size = Z_LVAL_P(arg3);
+                    margin = Z_LVAL_P(arg4);
+                } else if (Z_TYPE_P(arg2) == IS_LONG) {
+                    // qr_save(resource $link, int $size, int $margin, string $fn);
+                    size = Z_LVAL_P(arg2);
+                    margin = Z_LVAL_P(arg3);
+                    
+                    fp = VCWD_FOPEN(Z_STRVAL_P(arg4), "wb");
+                    if (!fp) {
+                        php_error_docref(NULL TSRMLS_CC, E_WARNING,
+                                "Unable to open '%s' for writing.",
+                                Z_STRVAL_P(arg4));
+                        RETURN_FALSE;
+                    }
+                }
+                break;
+
+            case 3:
+                // qr_save(resource $link, int $size, int $margin);
+                if (Z_TYPE_P(arg2) != IS_LONG) {
+                    php_error_docref(NULL TSRMLS_CC, E_WARNING,
+                            "should use type long as argument 2 when pass 3 arguments");
+                    RETURN_FALSE;
+                }
+
+                fp = php_open_temporary_file(NULL, NULL, &path TSRMLS_CC);
+                if (!fp) {
+                    php_error_docref(NULL TSRMLS_CC, E_WARNING,
+                            "Unable to open temporary file for writing.");
+                    RETURN_FALSE;
+                }
+
+                size = Z_LVAL_P(arg2);
+                margin = Z_LVAL_P(arg3);
+                temp_file = 1;
+
+                break;
+            case 2:
+                if (Z_TYPE_P(arg2) == IS_STRING) {
+                    fp = VCWD_FOPEN(Z_STRVAL_P(arg2), "wb");
+                    if (!fp) {
+                        php_error_docref(NULL TSRMLS_CC, E_WARNING,
+                                "Unable to open '%s' for writing.",
+                                Z_STRVAL_P(arg2));
+                        RETURN_FALSE;
+                    }
+                } else {
+                        php_error_docref(NULL TSRMLS_CC, E_WARNING,
+                                "should use type string as argument 2");
+                        RETURN_FALSE;
+                }
+                break;
+
+            case 1:
+                fp = php_open_temporary_file(NULL, NULL, &path TSRMLS_CC);
+
+                if (!fp) {
+                    php_error_docref(NULL TSRMLS_CC, E_WARNING,
+                            "Unable to open temporary file for writing.");
+                    RETURN_FALSE;
+                }
+                temp_file = 1;
+
+                break;
+
+            case 0:
+            default:
                 RETURN_FALSE;
-            }
-        } else {
-            fp = php_open_temporary_file(NULL, NULL, &path TSRMLS_CC);
-            if (!fp) {
-                php_error_docref(NULL TSRMLS_CC, E_WARNING,
-                        "Unable to open temporary file for writing.");
-                RETURN_FALSE;
-            }
         }
 
         realwidth = (qr->c->width + margin * 2) * size;
@@ -257,10 +321,7 @@ PHP_FUNCTION(qr_save) {
 
         efree(row);
 
-        if ((argc == 2) || (argc > 2 && fn != NULL)) {
-            fflush(fp);
-            fclose(fp);
-        } else {
+        if (temp_file) {
             fseek(fp, 0, SEEK_SET);
 #if APACHE && defined(CHARSET_EBCDIC)
             ap_bsetflag(php3_rqst->connection->client, B_EBCDIC2ASCII, 0);
@@ -271,6 +332,9 @@ PHP_FUNCTION(qr_save) {
             fclose(fp);
             VCWD_UNLINK((const char *)path);
             efree(path);
+        } else {
+            fflush(fp);
+            fclose(fp);
         }
 
         RETURN_TRUE;
