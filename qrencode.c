@@ -27,13 +27,27 @@
 #include <qrencode.h>
 #include <png.h>
 
+#if PHP_MAJOR_VERSION < 7
+typedef zend_rsrc_list_entry zend_resource;
+#define QR_ZEND_REGISTER_RESOURCE ZEND_REGISTER_RESOURCE
+#define QR_ZEND_FETCH_RESOURCE ZEND_FETCH_RESOURCE
+typedef int zend_size_t;
+#else
+#define QR_ZEND_REGISTER_RESOURCE(return_value, result, le_result)  ZVAL_RES(return_value,zend_register_resource(result, le_result))
+#define QR_ZEND_FETCH_RESOURCE(rsrc, rsrc_type, passed_id, default_id, resource_type_name, resource_type) \
+    if (!(rsrc = (rsrc_type)zend_fetch_resource(Z_RES_P(*passed_id), resource_type_name, resource_type))) {\
+        RETURN_FALSE;\
+    }
+typedef size_t zend_size_t;
+#endif
+
 static int le_qr;
 
 typedef struct {
     QRcode *c;
 } php_qrcode;
 
-static void qr_dtor(zend_rsrc_list_entry *rsrc TSRMLS_DC);
+static void qr_dtor(zend_resource *rsrc TSRMLS_DC);
 
 zend_function_entry qrencode_functions[] = {
     PHP_FE(qr_encode, NULL)
@@ -110,8 +124,8 @@ PHP_MINFO_FUNCTION(qrencode) {
 PHP_FUNCTION(qr_encode) {
     php_qrcode *qr = NULL;
     long version = 1, level = QR_ECLEVEL_L, mode = QR_MODE_8, casesensitive = 1;
-    const char *text;
-    int text_len;
+    char *text;
+    zend_size_t text_len;
 
     if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "s|llll",
                 &text, &text_len, &version, &level, &mode,
@@ -129,7 +143,7 @@ PHP_FUNCTION(qr_encode) {
         RETURN_FALSE;
     }
 
-    ZEND_REGISTER_RESOURCE(return_value, qr, le_qr);
+    QR_ZEND_REGISTER_RESOURCE(return_value, qr, le_qr);
 }
 /* }}} */
 
@@ -152,9 +166,13 @@ PHP_FUNCTION(qr_save) {
     unsigned char *row, *p, *q;
     int x, y, xx, yy, bit;
     int realwidth, temp_file = 0;
-    char *path;
-    int b;
     char buf[4096];
+    int b;
+#if PHP_MAJOR_VERSION < 7
+    char *path;
+#else
+    zend_string *path;
+#endif
 
     argc = ZEND_NUM_ARGS();
 
@@ -165,8 +183,8 @@ PHP_FUNCTION(qr_save) {
     if (link) {
         php_qrcode *qr = NULL;
 
-        ZEND_FETCH_RESOURCE2(qr, php_qrcode *, &link, -1,
-                "qr handle", le_qr, NULL);
+        QR_ZEND_FETCH_RESOURCE(qr, php_qrcode *, &link, -1,
+                "qr handle", le_qr);
 
         switch (argc) {
             case 4:
@@ -204,7 +222,11 @@ PHP_FUNCTION(qr_save) {
                     RETURN_FALSE;
                 }
 
+#if PHP_MAJOR_VERSION < 7
                 fp = php_open_temporary_file(NULL, NULL, &path TSRMLS_CC);
+#else
+                fp = php_open_temporary_file(NULL, NULL, &path);
+#endif
                 if (!fp) {
                     php_error_docref(NULL TSRMLS_CC, E_WARNING,
                             "Unable to open temporary file for writing.");
@@ -233,7 +255,11 @@ PHP_FUNCTION(qr_save) {
                 break;
 
             case 1:
+#if PHP_MAJOR_VERSION < 7
                 fp = php_open_temporary_file(NULL, NULL, &path TSRMLS_CC);
+#else
+                fp = php_open_temporary_file(NULL, NULL, &path);
+#endif
 
                 if (!fp) {
                     php_error_docref(NULL TSRMLS_CC, E_WARNING,
@@ -344,7 +370,7 @@ PHP_FUNCTION(qr_save) {
 }
 /* }}} */
 
-static void qr_dtor(zend_rsrc_list_entry *rsrc TSRMLS_DC) {
+static void qr_dtor(zend_resource *rsrc TSRMLS_DC) {
     php_qrcode *qr = (php_qrcode *)rsrc->ptr;
 
     if (qr->c)
