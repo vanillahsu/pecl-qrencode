@@ -47,7 +47,7 @@ typedef struct {
     QRcode *c;
 } php_qrcode;
 
-static void qr_dtor(zend_resource *rsrc TSRMLS_DC);
+static void qr_dtor(zend_resource *rsrc);
 
 zend_function_entry qrencode_functions[] = {
     PHP_FE(qr_encode, NULL)
@@ -56,7 +56,11 @@ zend_function_entry qrencode_functions[] = {
 };
 
 zend_module_entry qrencode_module_entry = {
-#if ZEND_MODULE_API_NO >= 20010901
+#if ZEND_MODULE_API_NO >= 20050922
+    STANDARD_MODULE_HEADER_EX,
+    NULL,
+    NULL,
+#else
     STANDARD_MODULE_HEADER,
 #endif
     "qrencode",
@@ -66,9 +70,7 @@ zend_module_entry qrencode_module_entry = {
     NULL,
     NULL,
     PHP_MINFO(qrencode),
-#if ZEND_MODULE_API_NO >= 20010901
-    "0.3",
-#endif
+    PHP_QRENCODE_VERSION,
     STANDARD_MODULE_PROPERTIES
 };
 
@@ -370,7 +372,7 @@ PHP_FUNCTION(qr_save) {
 }
 /* }}} */
 
-static void qr_dtor(zend_resource *rsrc TSRMLS_DC) {
+static void qr_dtor(zend_resource *rsrc) {
     php_qrcode *qr = (php_qrcode *)rsrc->ptr;
 
     if (qr->c)

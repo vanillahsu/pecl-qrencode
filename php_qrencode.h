@@ -31,6 +31,8 @@ extern zend_module_entry qrencode_module_entry;
 #include "TSRM.h"
 #endif
 
+#define PHP_QRENCODE_VERSION "0.6"
+
 PHP_MINIT_FUNCTION(qrencode);
 PHP_MSHUTDOWN_FUNCTION(qrencode);
 PHP_MINFO_FUNCTION(qrencode);
