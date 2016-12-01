@@ -25,6 +25,7 @@
 #include "php_qrencode.h"
 #include "php_open_temporary_file.h"
 #include <qrencode.h>
+#define PNG_SKIP_SETJMP_CHECK 1
 #include <png.h>
 
 #if PHP_MAJOR_VERSION < 7
