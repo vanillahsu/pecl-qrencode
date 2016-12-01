@@ -13,13 +13,11 @@ env:
 
 before_script:
   - $PHPIZE_BIN &> /dev/null
-  - ./configure --silent --enable-qrencode &> /dev/null
-  - make --silent -j4 &> /dev/null
-  - make --silent install
+  - ./configure --silent --with-qrencode &> /dev/null
+  - make 
 
 addons:
   apt:
     packages:
       - libqrencode-dev
       - libpng-dev
-      - build-essential
