@@ -22,3 +22,4 @@ addons:
     packages:
       - libqrencode-dev
       - libpng-dev
+      - build-essential
