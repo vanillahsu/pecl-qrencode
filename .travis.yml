@@ -20,4 +20,4 @@ addons:
   apt:
     packages:
       - libqrencode-dev
-      - libpng12-dev
+      - libpng16-dev
