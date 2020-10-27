@@ -21,6 +21,21 @@
 extern zend_module_entry qrencode_module_entry;
 #define phpext_qrencode_ptr &qrencode_module_entry
 
+#if PHP_VERSION_ID >= 80000
+#ifndef TSRMLS_C
+#define TSRMLS_C
+#endif
+#ifndef TSRMLS_CC
+#define TSRMLS_CC
+#endif
+#ifndef TSRMLS_D
+#define TSRMLS_D
+#endif
+#ifndef TSRMLS_DC
+#define TSRMLS_DC
+#endif
+#endif
+
 #ifdef PHP_WIN32
 #define PHP_QRENCODE_API __declspec(dllexport)
 #else
@@ -31,7 +46,7 @@ extern zend_module_entry qrencode_module_entry;
 #include "TSRM.h"
 #endif
 
-#define PHP_QRENCODE_VERSION "0.6"
+#define PHP_QRENCODE_VERSION "0.7"
 
 PHP_MINIT_FUNCTION(qrencode);
 PHP_MSHUTDOWN_FUNCTION(qrencode);
