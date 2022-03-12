@@ -1,3 +1,9 @@
+Version 0.8 2022/03/12
+  - Add arginfo to make it works with php8.
+
+Version 0.7 2020/10/27
+  - Add php8 support.
+
 Version 0.6 2016/08/26
   - remove deprecated TSRMLS_DC.
 

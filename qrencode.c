@@ -24,6 +24,7 @@
 #include "ext/standard/info.h"
 #include "php_qrencode.h"
 #include "php_open_temporary_file.h"
+#include "qrencode_arginfo.h"
 #include <qrencode.h>
 #define PNG_SKIP_SETJMP_CHECK 1
 #include <png.h>
@@ -50,12 +51,6 @@ typedef struct {
 
 static void qr_dtor(zend_resource *rsrc);
 
-zend_function_entry qrencode_functions[] = {
-    PHP_FE(qr_encode, NULL)
-    PHP_FE(qr_save, NULL)
-    {NULL, NULL, NULL}
-};
-
 zend_module_entry qrencode_module_entry = {
 #if ZEND_MODULE_API_NO >= 20050922
     STANDARD_MODULE_HEADER_EX,
@@ -65,7 +60,7 @@ zend_module_entry qrencode_module_entry = {
     STANDARD_MODULE_HEADER,
 #endif
     "qrencode",
-    qrencode_functions,
+    ext_functions,
     PHP_MINIT(qrencode),
     PHP_MSHUTDOWN(qrencode),
     NULL,
