@@ -1,3 +1,6 @@
+Version 0.9 2022/03/14
+  - add php7 support back.
+
 Version 0.8 2022/03/12
   - Add arginfo to make it works with php8.
 
