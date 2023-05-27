@@ -1,7 +1,9 @@
 <?php
 
-/** @generate-function-entries */
+/** @generate-class-entries */
 
-function qr_encode(string $text, ?int $version, ?int $leve, ?int $mode, ?int $casesenstitive): resource |false {}
+/** @return resource|false */
+function qr_encode(string $text, ?int $version = 1, ?int $level = QR_ECLEVEL_L, ?int $mode = QR_MODE_8, ?int $casesenstitive = 1) {}
 
-function qr_save(resource $qrencode, ?string $filename, ?int $size, ?int $margin): bool {}
+/** @param resource $qrencode */
+function qr_save($qrencode, ?string $filename = null, ?int $size = 3, ?int $margin = 4): bool {}
