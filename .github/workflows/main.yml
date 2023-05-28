@@ -22,13 +22,10 @@ jobs:
 
         name:
           - linux
-          - mac
 
         include:
           # Linux
           - { name: linux, ts: 'nts', compiler: 'gcc',   os: ubuntu-20.04 }
-          # macOS
-          - { name: mac,   ts: 'nts', compiler: 'clang', os: macos-11 }
 
     steps:
       - uses: actions/checkout@v2
@@ -44,10 +41,6 @@ jobs:
           php-version: ${{ matrix.php }}
 
       - name: Install dependencies
-        if: runner.os == 'macOS'
-        run: brew install libqrencode
-
-      - name: Install dependencies
         if: runner.os == 'linux'
         run: sudo apt install libqrencode-dev
 
@@ -56,11 +49,7 @@ jobs:
 
       - name: Configure
         run: |
-          if [ "${{ runner.os }}" = "macOS" ]; then
-            ./configure --with-zlib-dir=$(brew --prefix)/opt/zlib
-          else
-            ./configure
-          fi
+          ./configure
 
       - name: Compile
         run: |
