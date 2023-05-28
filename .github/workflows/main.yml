@@ -49,7 +49,7 @@ jobs:
 
       - name: Install dependencies
         if: runner.os == 'linux'
-        run: apt install libqrencode-dev
+        run: sudo apt install libqrencode-dev
 
       - name: phpize
         run: phpize
