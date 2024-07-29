@@ -13,54 +13,42 @@ on:
 jobs:
   build:
     name: build / php-${{ matrix.php }}-${{ matrix.ts }}-${{ matrix.name }}-${{ matrix.compiler }}
-
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
         php: [ '8.1', '8.2', '8.3', '8.4' ]
-
         name:
           - linux
-
         include:
           # Linux
           - { name: linux, ts: 'nts', compiler: 'gcc',   os: ubuntu-20.04 }
-
     steps:
-      - uses: actions/checkout@v2
-
+      - uses: actions/checkout@v4
       - name: Set artifact name
         id: setup-artifact
         run: |
           echo "::set-output name=qrencode::${{ matrix.php }}-${{ matrix.ts }}-${{ matrix.name }}-${{ matrix.compiler }}"
-
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
         with:
           php-version: ${{ matrix.php }}
-
       - name: Install dependencies
         if: runner.os == 'linux'
         run: sudo apt install libqrencode-dev
-
       - name: phpize
         run: phpize
-
       - name: Configure
         run: |
           ./configure
-
       - name: Compile
         run: |
           make -j"$(getconf _NPROCESSORS_ONLN)"
           sudo make install
-
       - name: Extension Info
         run: |
           php --ini
           php -d extension=./modules/qrencode.so --ri qrencode
-
       - name: Run Tests
         run: make test
         env:
