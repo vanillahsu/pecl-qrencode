@@ -28,7 +28,7 @@ jobs:
       - name: Set artifact name
         id: setup-artifact
         run: |
-          echo "::set-output name=qrencode::${{ matrix.php }}-${{ matrix.ts }}-${{ matrix.name }}-${{ matrix.compiler }}"
+          echo "name=name=qrencode::${{ matrix.php }}-${{ matrix.ts }}-${{ matrix.name }}-${{ matrix.compiler }}" >> $GITHUB_OUTPUT
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
         with:
